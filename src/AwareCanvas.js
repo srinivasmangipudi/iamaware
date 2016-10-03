@@ -95,7 +95,9 @@ var AwareCanvas = React.createClass({
 
           //update state of this component
           this.setState({userId: user.uid, isLoggedIn: true});
+          //attach the remove self on disconnect clause
           this.firebaseRefs.awareUsersList.child(this.state.userId).onDisconnect().remove();
+          //update the total touches 
           this.firebaseRefs.totalTouches.transaction(function (currentData) {
             return currentData + 1;
           });
