@@ -30,7 +30,7 @@ var AwareCanvas = React.createClass({
     //console.log("componentWillMount");
   },
   componentDidMount: function() {
-    console.log("componentDidMount");
+    //console.log("componentDidMount");
     // Initialize Firebase
     // The security rules are in place, only with anonymous auth object will access be granted to be added to the aware list.
     var config = {
@@ -83,7 +83,6 @@ var AwareCanvas = React.createClass({
           // User is signed out.
           userObj = null;
           this.setState({isSelected: "false", isLoggedIn: false, userId: null}, () => {
-            console.log(this.state);
             this.updateCanvas();
           }); 
         }
@@ -96,6 +95,7 @@ var AwareCanvas = React.createClass({
         {size = Object.keys(snap.val()).length;} 
       else {size=0};
       
+      console.log(size);
       this.setState({awareUsersNow: size});
       this.updateCanvas();      
     });
