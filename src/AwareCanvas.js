@@ -13,6 +13,7 @@ var userObj = null;
 var firebaseDbRef;
 var awareUserListRef;
 var totalTouchesRef;
+var mostAwareRecordRef;
 
 var AwareCanvas = React.createClass({
   mixins: [ReactFireMixin],
@@ -25,6 +26,7 @@ var AwareCanvas = React.createClass({
             isSelected: "false",
             awareUsersNow: 0,
             totalTouches: 0,
+            mostAwareRecord: 0,
             isLoggedIn: "false"
         };
   },
@@ -50,6 +52,9 @@ var AwareCanvas = React.createClass({
 
     totalTouchesRef = firebaseDbRef.child("totalTouches");
     this.bindAsObject(totalTouchesRef, "totalTouches");
+
+    mostAwareRecordRef = firebaseDbRef.child("mostAwareRecord");
+    this.bindAsObject(mostAwareRecordRef, "mostAwareRecord");
 
     this.getAwareCount();
     this.updateCanvas();
@@ -119,6 +124,17 @@ var AwareCanvas = React.createClass({
       
       // console.log(size); subtract the dummy element
       this.setState({awareUsersNow: size-1});
+      this.updateCanvas();
+
+      //if this beats the record -- wow time to celebrate!!
+      if((size-1) > this.state.mostAwareRecord[".value"])
+      {
+        //update the record 
+        this.firebaseRefs.mostAwareRecord.transaction(function (currentData) {
+          return size-1;
+          //return currentData + 1;
+        });
+      }
     });
   },
   componentWillUnmount: function() {
@@ -207,6 +223,8 @@ var AwareCanvas = React.createClass({
             style={style} width={300} height={300}/>
           <div className="instructions">
             This has been touched {this.state.totalTouches[".value"]} times till now.
+            <br/>
+            Maximum awareness touching together was {this.state.mostAwareRecord[".value"]} people.
           </div>          
         </div>
       );

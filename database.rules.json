@@ -15,6 +15,12 @@
         ".write": "auth !== null && auth.provider === 'anonymous'",
         // grants read access anyone
         ".read": "true"        
+      },
+      "mostAwareRecord": {
+          // grants write access to the owner of this user account whose uid must exactly match the key ($uid)
+          ".write": "auth !== null && auth.provider === 'anonymous'",
+          // grants read access anyone
+          ".read": "true"
       }
   }
 }
