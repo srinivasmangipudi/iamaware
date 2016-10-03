@@ -7,9 +7,14 @@
         // grants read access to any user who is logged in anonymously
         ".read": "auth !== null && auth.provider === 'anonymous'"
       },
-        //grants reads access to list at root level to read counts.
-        ".read": "auth !== null && auth.provider === 'anonymous'"
+      //grants reads access to list at root level to read counts.
+      ".read": "auth !== null && auth.provider === 'anonymous'"
+      },
+      "totalTouches": {
+        // grants write access to the owner of this user account whose uid must exactly match the key ($uid)
+        ".write": "auth !== null && auth.provider === 'anonymous'",
+        // grants read access anyone
+        ".read": "true"        
       }
-        
   }
 }

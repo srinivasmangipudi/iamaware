@@ -12,6 +12,7 @@ var userIdSession = null;
 var userObj = null;
 var firebaseDbRef;
 var awareUserListRef;
+var totalTouchesRef;
 
 var AwareCanvas = React.createClass({
   mixins: [ReactFireMixin],
@@ -23,6 +24,7 @@ var AwareCanvas = React.createClass({
             userId: userIdSession,
             isSelected: "false",
             awareUsersNow: 0,
+            totalTouches: 0,
             isLoggedIn: "false"
         };
   },
@@ -46,7 +48,11 @@ var AwareCanvas = React.createClass({
     awareUserListRef = firebaseDbRef.child("awareUsersList");
     this.bindAsArray(awareUserListRef, "awareUsersList");
 
+    totalTouchesRef = firebaseDbRef.child("totalTouches");
+    this.bindAsObject(totalTouchesRef, "totalTouches");
+
     this.getAwareCount();
+    this.getTotalCount();
     this.updateCanvas();
   },
   logIn: function() {
@@ -91,6 +97,9 @@ var AwareCanvas = React.createClass({
           //update state of this component
           this.setState({userId: user.uid, isLoggedIn: true});
           this.firebaseRefs.awareUsersList.child(this.state.userId).onDisconnect().remove();
+          this.firebaseRefs.totalTouches.transaction(function (currentData) {
+            return currentData + 1;
+          });
         } else {
           // User is signed out.
           userObj = null;
@@ -107,11 +116,10 @@ var AwareCanvas = React.createClass({
         {size = Object.keys(snap.val()).length;} 
       else {size=0};
       
-      // console.log(size);
-      this.setState({awareUsersNow: size});
-      this.updateCanvas();      
+      // console.log(size); subtract the dummy element
+      this.setState({awareUsersNow: size-1});
     });
-  },  
+  },
   componentWillUnmount: function() {
     //console.log("componentWillUnmount called");
   },
@@ -197,6 +205,7 @@ var AwareCanvas = React.createClass({
             onTouchStart={this.handleTouch} onTouchEnd={this.handleUntouch}
             style={style} width={300} height={300}/>
           <div className="instructions">
+            This has been touched {this.state.totalTouches[".value"]} times till now.
           </div>          
         </div>
       );
