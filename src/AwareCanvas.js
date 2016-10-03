@@ -52,7 +52,6 @@ var AwareCanvas = React.createClass({
     this.bindAsObject(totalTouchesRef, "totalTouches");
 
     this.getAwareCount();
-    this.getTotalCount();
     this.updateCanvas();
   },
   logIn: function() {
