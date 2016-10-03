@@ -50,7 +50,19 @@ var AwareCanvas = React.createClass({
     this.updateCanvas();
   },
   logIn: function() {
+    //start loggin in firebase anon
+    firebase.auth().signInAnonymously().catch(function(error) {
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      console.log("--auth error");
+      console.log(errorCode + " : " + errorMessage);
+    });
 
+    var self=this;
+    firebase.auth().onAuthStateChanged(function(user) {
+      self.loggedIn(user);
+    });          
   },
   loggedIn: function(user) {
     if (user) {
@@ -95,53 +107,13 @@ var AwareCanvas = React.createClass({
         {size = Object.keys(snap.val()).length;} 
       else {size=0};
       
-      console.log(size);
+      // console.log(size);
       this.setState({awareUsersNow: size});
       this.updateCanvas();      
     });
   },  
   componentWillUnmount: function() {
     //console.log("componentWillUnmount called");
-  },
-  handleClick: function(e) {
-    e.preventDefault();
-    var ist = this.state.isSelected;
-
-    //user already connected, wants to disconnect now
-    if(ist === "true"){
-       this.firebaseRefs.awareUsersList.child(this.state.userId).remove();
-
-      this.setState({isSelected: "false"}, () => {
-        this.updateCanvas();
-      });      
-    }
-    //user is disconnected, wants to connect
-    else
-    {
-      this.setState({isSelected: "true"}, () => {
-        this.updateCanvas();
-      });
-      if(this.userObj === undefined)
-      {
-        //sign in anonymously
-        firebase.auth().signInAnonymously().catch(function(error) {
-          // Handle Errors here.
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          console.log("**auth error**");
-          console.log(errorCode + " : " + errorMessage);
-        });
-
-        var self=this;
-        firebase.auth().onAuthStateChanged(function(user) {
-          self.loggedIn(user);
-        });              
-      }
-      else
-      {
-        this.loggedIn(this.userObj);
-      }
-    }
   },
   handleTouch: function(e) {
     e.preventDefault();
@@ -152,19 +124,7 @@ var AwareCanvas = React.createClass({
       //on click log anonymously and update states
       if(this.userObj === undefined)
       {
-        //start loggin in firebase anon
-        firebase.auth().signInAnonymously().catch(function(error) {
-          // Handle Errors here.
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          console.log("--auth error");
-          console.log(errorCode + " : " + errorMessage);
-        });
-
-        var self=this;
-        firebase.auth().onAuthStateChanged(function(user) {
-          self.loggedIn(user);
-        });              
+        this.logIn();
       }
       else
       {
@@ -201,7 +161,7 @@ var AwareCanvas = React.createClass({
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 16px Arial";
       var count = this.state.awareUsersNow;
-      txtxt =  count + " people are touching";
+      txtxt =  (count-1) + " people are touching";
 
       if(count === 1 || count === 0)
       {
@@ -233,11 +193,10 @@ var AwareCanvas = React.createClass({
         }
       return (
         <div className="awareCanvas">
-          <canvas id="awareCanvas" ref="canvas" onClick={this.handleClick} 
+          <canvas id="awareCanvas" ref="canvas" onMouseDown={this.handleTouch} onMouseUp={this.handleUntouch}
             onTouchStart={this.handleTouch} onTouchEnd={this.handleUntouch}
             style={style} width={300} height={300}/>
           <div className="instructions">
-            Please touch and hold the screen to know how many other people are toucing at the same time.
           </div>          
         </div>
       );
