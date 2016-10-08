@@ -244,7 +244,7 @@ var AwareCanvas = React.createClass({
           <div className="instructions">
             This has been touched {this.state.totalTouches[".value"]} times till now.
             <br/>
-            Maximum awareness touching together was {this.state.mostAwareRecord[".value"]} people.
+            Most number of people touching together were {this.state.mostAwareRecord[".value"]}.
           </div>          
         </div>
       );
