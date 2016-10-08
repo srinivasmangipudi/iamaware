@@ -60,19 +60,39 @@ var AwareCanvas = React.createClass({
     this.updateCanvas();
   },
   logIn: function() {
-    //start loggin in firebase anon
-    firebase.auth().signInAnonymously().catch(function(error) {
-      // Handle Errors here.
-      var errorCode = error.code;
-      var errorMessage = error.message;
-      console.log("--auth error");
-      console.log(errorCode + " : " + errorMessage);
-    });
+    console.log("--log in");
+    console.log(firebase.auth.currentUser);
+    if(firebase.auth.currentUser)
+      console.log(firebase.auth.currentUser.uid);
 
-    var self=this;
-    firebase.auth().onAuthStateChanged(function(user) {
-      self.loggedIn(user);
-    });          
+    //only if the current annon auth is logged out
+    if(firebase.auth.currentUser === undefined)
+    {
+      console.log("---- no existing session. start anonymous login");
+      //start loggin in firebase anon
+      firebase.auth().signInAnonymously().catch(function(error) {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        console.log("--auth error");
+        console.log(errorCode + " : " + errorMessage);
+      });
+
+      var self=this;
+      firebase.auth().onAuthStateChanged(function(user) {
+        console.log("** auth state changed");
+        console.log(user.uid);
+
+        if(user.uid != self.state.userId)
+          self.loggedIn(user);
+      });         
+    }
+    else
+    {
+      console.log("---- existing session found. use that");
+      this.loggedIn(firebase.auth().currentUser);
+    }
+     
   },
   loggedIn: function(user) {
     if (user) {
@@ -90,7 +110,7 @@ var AwareCanvas = React.createClass({
             // userAgent: navigator.userAgent
           };
 
-          // Use the userid from analymous login as key for a new touch aware session.
+          // Use the userid from anonymous login as key for a new touch aware session.
           // Write the new post's data simultaneously in the posts list and the user's post list.
           let updates = {};
           updates['/awareUsersList/' + uid] = postData;
