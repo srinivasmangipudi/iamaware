@@ -61,12 +61,12 @@ var AwareCanvas = React.createClass({
   },
   logIn: function() {
     console.log("--log in");
-    console.log(firebase.auth.currentUser);
-    if(firebase.auth.currentUser)
-      console.log(firebase.auth.currentUser.uid);
+    console.log(firebase.auth().currentUser);
+    if(firebase.auth().currentUser)
+      console.log(firebase.auth().currentUser.uid);
 
     //only if the current annon auth is logged out
-    if(firebase.auth.currentUser === undefined)
+    if(firebase.auth().currentUser === undefined)
     {
       console.log("---- no existing session. start anonymous login");
       //start loggin in firebase anon
@@ -82,9 +82,7 @@ var AwareCanvas = React.createClass({
       firebase.auth().onAuthStateChanged(function(user) {
         console.log("** auth state changed");
         console.log(user.uid);
-
-        if(user.uid != self.state.userId)
-          self.loggedIn(user);
+        self.loggedIn(user);
       });         
     }
     else
@@ -102,26 +100,41 @@ var AwareCanvas = React.createClass({
           let uid = user.uid;
           let date = Date.now().toString();
 
+          // if the anon login userid has changed, delete the old one from list.
+          // if(this.state.userId !== uid)
+          // {
+          //   this.firebaseRefs.awareUsersList.child(this.state.userId).remove();
+          // }
           // A data entry - can add other params here like location etc.
           let postData = {
             id: uid,
+            tag: "localhost",
             // path: window.location.pathname,
              arrivedAt: date,
             // userAgent: navigator.userAgent
           };
 
-          // Use the userid from anonymous login as key for a new touch aware session.
-          // Write the new post's data simultaneously in the posts list and the user's post list.
           let updates = {};
           updates['/awareUsersList/' + uid] = postData;
 
           //save the user to the db
-          firebase.database().ref().update(updates);
+          firebase.database().ref().update(updates); 
+
+          //attach the remove self on disconnect clause
+          try
+          {
+            this.firebaseRefs.awareUsersList.child(this.state.userId).onDisconnect().remove();
+          }
+          catch(e)
+          {
+            console.log("userid does not exist")
+            console.log(e);
+          }
+          
 
           //update state of this component
           this.setState({userId: user.uid, isLoggedIn: true});
-          //attach the remove self on disconnect clause
-          this.firebaseRefs.awareUsersList.child(this.state.userId).onDisconnect().remove();
+
           //update the total touches 
           this.firebaseRefs.totalTouches.transaction(function (currentData) {
             return currentData + 1;
@@ -166,15 +179,17 @@ var AwareCanvas = React.createClass({
         this.updateCanvas();
       });
 
-      //on click log anonymously and update states
-      if(this.userObj === undefined)
-      {
-        this.logIn();
-      }
-      else
-      {
-        this.loggedIn(this.userObj);
-      }
+    this.logIn();
+
+      // //on click log anonymously and update states
+      // if(this.userObj === undefined)
+      // {
+      //   this.logIn();
+      // }
+      // else
+      // {
+      //   this.loggedIn(this.userObj);
+      // }
   },
   handleUntouch: function(e) {
     e.preventDefault();
