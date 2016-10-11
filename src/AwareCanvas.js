@@ -27,7 +27,10 @@ var AwareCanvas = React.createClass({
             awareUsersNow: 0,
             totalTouches: 0,
             mostAwareRecord: 0,
-            isLoggedIn: "false"
+            isLoggedIn: "false",
+            lat: "",
+            lng: "",
+            accuracy: ""
         };
   },
   componentWillMount: function() {
@@ -55,9 +58,56 @@ var AwareCanvas = React.createClass({
 
     mostAwareRecordRef = firebaseDbRef.child("mostAwareRecord");
     this.bindAsObject(mostAwareRecordRef, "mostAwareRecord");
+    
+    //try to ge the geolocation of the user
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(this.successCallback, this.errorCallback);
+    } else {
+        this.displayErrorMessage("The browser does not support the Geolocation API.");
+    }
 
     this.getAwareCount();
     this.updateCanvas();
+  },
+  successCallback: function(position) {
+    console.log("successCallback");
+
+    //save coordinates to state
+    this.setState({lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy});
+
+    console.log("position.coords.latitude:" + position.coords.latitude);
+    console.log("position.coords.longitude:" + position.coords.longitude);
+    console.log("position.coords.accuracy:" + position.coords.accuracy);
+
+    /*$("#latitude").html(position.coords.latitude);
+    $("#longitude").html(position.coords.longitude);
+    $("#accuracy").html(position.coords.accuracy);
+    $("#displayMap").attr("href", "http://maps.google.com/?q=" + 
+            position.coords.latitude + "," + position.coords.longitude);
+    $("#displayMap").removeClass("disabled");*/
+  },
+  errorCallback: function(error) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            this.displayErrorMessage("The request was denied. If a message seeking " + 
+              "persmission was not displayed then check your browser settings.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            this.displayErrorMessage("The position of the device could not be determined. " + 
+              "For instance, one or more of the location providers used in the location " + 
+              "acquisition process reported an internal error that caused the process to fail entirely.");
+            break;
+        case error.TIMEOUT:
+            this.displayErrorMessage("The request to get user location timed out " + 
+              "before the operation could complete.");
+            break;
+        case error.UNKNOWN_ERROR:
+            this.displayErrorMessage("Something unexpected happened.");
+            break;
+    }
+  },
+  displayErrorMessage: function(errtxt) {
+    console.log(errtxt);
   },
   logIn: function() {
     console.log("--log in");
@@ -111,8 +161,13 @@ var AwareCanvas = React.createClass({
             tag: "localhost",
             // path: window.location.pathname,
              arrivedAt: date,
+             lat: this.state.lat,
+             lng: this.state.lng,
+             accuracy: this.state.accuracy
             // userAgent: navigator.userAgent
           };
+
+          //console.log(postData);
 
           let updates = {};
           updates['/awareUsersList/' + uid] = postData;
