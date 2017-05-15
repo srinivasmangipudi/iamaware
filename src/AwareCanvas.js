@@ -116,7 +116,7 @@ var AwareCanvas = React.createClass({
       console.log(firebase.auth().currentUser.uid);
 
     //only if the current annon auth is logged out
-    if(firebase.auth().currentUser === undefined)
+    if(firebase.auth().currentUser === undefined || firebase.auth().currentUser === null || firebase.auth().currentUser.uid ===null)
     {
       console.log("---- no existing session. start anonymous login");
       //start loggin in firebase anon
@@ -262,6 +262,15 @@ var AwareCanvas = React.createClass({
     var fillStyle = '#000000';
     var txtxt;
     var textWidth;
+    
+    // var nwd = window.innerWidth - 20;
+    // var nht = window.innerHeight - 120;
+
+    var nwd = 300;
+    var nht = 300;
+
+    ctx.canvas.width  = nwd;
+    ctx.canvas.height = nht;
 
     if(isSelected === "true")
     {
@@ -269,7 +278,7 @@ var AwareCanvas = React.createClass({
     }
  
     ctx.fillStyle = fillStyle;
-    ctx.fillRect(0,0, 300, 300);
+    ctx.fillRect(0,0, nwd, nht);
 
     if(isSelected === "true")
     {
