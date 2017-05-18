@@ -34,10 +34,10 @@ var AwareCanvas = React.createClass({
         };
   },
   componentWillMount: function() {
-    //console.log("componentWillMount");
+    console.log("componentWillMount");
   },
   componentDidMount: function() {
-    //console.log("componentDidMount");
+    console.log("componentDidMount");
     // Initialize Firebase
     // The security rules are in place, only with anonymous auth object will access be granted to be added to the aware list.
     var config = {
@@ -49,6 +49,34 @@ var AwareCanvas = React.createClass({
 
     firebase.initializeApp(config);
     firebaseDbRef = firebase.database().ref();
+
+    // console.log("--component mounting");
+    // console.log(firebase.auth().currentUser);
+    // if(firebase.auth().currentUser)
+      // console.log(firebase.auth().currentUser.uid);
+    // else
+      // console.log("no current user found");
+
+    firebase.auth().onAuthStateChanged(function(user) {
+      console.log("-- ASC registered onAuthStateChanged");
+
+      // if (user) {
+      //   // User is signed in.
+      //   // console.log("ASC found user");
+      //   // console.log(user);
+      //   firebase.auth().currentUser = user;
+      // } else {
+      //   // No user is signed in.
+      //   // console.log("ASC no current user found");
+      // }
+    });
+
+    // console.log("--after auth reg");
+    // console.log(firebase.auth().currentUser);
+    // if(firebase.auth().currentUser)
+    //   console.log(firebase.auth().currentUser.uid);
+    // else
+    //   console.log("no current user found");
 
     awareUserListRef = firebaseDbRef.child("awareUsersList");
     this.bindAsArray(awareUserListRef, "awareUsersList");
@@ -66,18 +94,19 @@ var AwareCanvas = React.createClass({
         this.displayErrorMessage("The browser does not support the Geolocation API.");
     }
 
+
     this.getAwareCount();
     this.updateCanvas();
   },
   successCallback: function(position) {
-    console.log("successCallback");
+    // console.log("successCallback");
 
     //save coordinates to state
     this.setState({lat: position.coords.latitude, lng: position.coords.longitude, accuracy: position.coords.accuracy});
 
-    console.log("position.coords.latitude:" + position.coords.latitude);
-    console.log("position.coords.longitude:" + position.coords.longitude);
-    console.log("position.coords.accuracy:" + position.coords.accuracy);
+    // console.log("position.coords.latitude:" + position.coords.latitude);
+    // console.log("position.coords.longitude:" + position.coords.longitude);
+    // console.log("position.coords.accuracy:" + position.coords.accuracy);
 
     /*$("#latitude").html(position.coords.latitude);
     $("#longitude").html(position.coords.longitude);
@@ -110,36 +139,73 @@ var AwareCanvas = React.createClass({
     console.log(errtxt);
   },
   logIn: function() {
-    console.log("--log in");
-    console.log(firebase.auth().currentUser);
-    if(firebase.auth().currentUser)
-      console.log(firebase.auth().currentUser.uid);
 
-    //only if the current annon auth is logged out
-    if(firebase.auth().currentUser === undefined || firebase.auth().currentUser === null || firebase.auth().currentUser.uid ===null)
-    {
-      console.log("---- no existing session. start anonymous login");
-      //start loggin in firebase anon
-      firebase.auth().signInAnonymously().catch(function(error) {
-        // Handle Errors here.
-        var errorCode = error.code;
-        var errorMessage = error.message;
-        console.log("--auth error");
-        console.log(errorCode + " : " + errorMessage);
-      });
+    var self=this;
+    firebase.auth().onAuthStateChanged(function(user) {
+      // console.log("** auth state changed");
+      // console.log(user.uid);
 
-      var self=this;
-      firebase.auth().onAuthStateChanged(function(user) {
-        console.log("** auth state changed");
-        console.log(user.uid);
+      if (user) {
+        // User is signed in.
+        // console.log("auth state user found");
+        // console.log(user);
         self.loggedIn(user);
-      });         
-    }
-    else
-    {
-      console.log("---- existing session found. use that");
-      this.loggedIn(firebase.auth().currentUser);
-    }
+      } else {
+        // No user is signed in.
+        // console.log("no auth state current user found");
+        // console.log("---- no existing session. start anonymous login");
+        //start loggin in firebase anon
+        firebase.auth().signInAnonymously().catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // console.log("--auth error");
+          // console.log(errorCode + " : " + errorMessage);
+        });
+
+        // var self=this;
+        // firebase.auth().onAuthStateChanged(function(user) {
+        //   console.log("** auth state changed");
+        //   console.log(user.uid);
+        //   self.loggedIn(user);
+        // });         
+      }
+      
+    });         
+
+    //--old code with double logging problem
+    // console.log("--log in");
+    // console.log(firebase.auth().currentUser);
+    // if(firebase.auth().currentUser)
+    //   console.log(firebase.auth().currentUser.uid);
+    // else
+    //   console.log("no current user found");
+
+    // //only if the current annon auth is logged out
+    // if(firebase.auth().currentUser === undefined || firebase.auth().currentUser === null || firebase.auth().currentUser.uid === null)
+    // {
+    //   console.log("---- no existing session. start anonymous login");
+    //   //start loggin in firebase anon
+    //   firebase.auth().signInAnonymously().catch(function(error) {
+    //     // Handle Errors here.
+    //     var errorCode = error.code;
+    //     var errorMessage = error.message;
+    //     console.log("--auth error");
+    //     console.log(errorCode + " : " + errorMessage);
+    //   });
+
+    //   var self=this;
+    //   firebase.auth().onAuthStateChanged(function(user) {
+    //     console.log("** auth state changed");
+    //     console.log(user.uid);
+    //     self.loggedIn(user);
+    //   });         
+    // }
+    // else
+    // {
+    //   console.log("---- existing session found. use that");
+    //   this.loggedIn(firebase.auth().currentUser);
+    // }
      
   },
   loggedIn: function(user) {
@@ -178,11 +244,12 @@ var AwareCanvas = React.createClass({
           //attach the remove self on disconnect clause
           try
           {
-            this.firebaseRefs.awareUsersList.child(this.state.userId).onDisconnect().remove();
+            //this.firebaseRefs.awareUsersList.child(this.state.userId).onDisconnect().remove();
+            this.firebaseRefs.awareUsersList.child(uid).onDisconnect().remove();
           }
           catch(e)
           {
-            console.log("userid does not exist")
+            console.log("can't attach onDisconnect Listener. userid does not exist")
             console.log(e);
           }
           
@@ -210,7 +277,7 @@ var AwareCanvas = React.createClass({
         {size = Object.keys(snap.val()).length;} 
       else {size=0};
       
-      // console.log(size); subtract the dummy element
+      // console.log(size); //subtract the dummy element
       this.setState({awareUsersNow: size-1});
       this.updateCanvas();
 
@@ -285,13 +352,13 @@ var AwareCanvas = React.createClass({
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 16px Arial";
       var count = this.state.awareUsersNow;
-      txtxt =  (count-1) + " people are touching";
+      txtxt =  (count-1) + " other people are touching";
 
       if(count === 1 || count === 0)
       {
-        txtxt = "You are the only one.";
+        txtxt = "you are the only one";
       }else if(count === 2){
-        txtxt = "Some else is touching.";
+        txtxt = "Someone else is touching";
       }
       
       textWidth = ctx.measureText(txtxt ).width;
@@ -300,7 +367,7 @@ var AwareCanvas = React.createClass({
     else{
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 16px Arial";
-      txtxt = "Touch to be Aware";
+      txtxt = "Touch to be aware";
       textWidth = ctx.measureText(txtxt).width;
       ctx.fillText(txtxt , (this.refs.canvas.width/2) - (textWidth / 2), 100);
     }
